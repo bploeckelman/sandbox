@@ -8,15 +8,25 @@ int main()
     InitWindow(screen_width, screen_height, "Raylib Sandbox");
     SetTargetFPS(60);
 
+    Texture texture = LoadTexture("data/game-space.png");
+
     while (!WindowShouldClose()) {
-        // update ...
+        // update
+        {
+            // ...
+        }
 
         // draw
         BeginDrawing();
-        ClearBackground(RAYWHITE);
-        DrawText("Raylib", 190, 200, 20, LIGHTGRAY);
+        {
+            ClearBackground(SKYBLUE);
+            DrawTexture(texture, (screen_width - texture.width) / 2, (screen_height - texture.height) / 2, WHITE);
+            DrawText("Raylib", 190, 200, 80, GRAY);
+        }
         EndDrawing();
     }
+
+    UnloadTexture(texture);
 
     CloseWindow();
 
