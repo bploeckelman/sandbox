@@ -2,6 +2,7 @@
 #define RAYLIB_SANDBOX_GAME_H
 
 #include "raylib.h"
+#include "../gamelib/gamelib.h"
 
 typedef struct Game {
 
@@ -15,6 +16,8 @@ typedef struct Game {
     struct Assets {
         Texture texture;
     } assets;
+
+    GameLib lib;
 
 } Game;
 

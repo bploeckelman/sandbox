@@ -14,11 +14,14 @@ void initialize() {
 
     game.assets.texture = LoadTexture("data/game-space.png");
 
+    load(&game.lib);
+
     game.running = true;
 }
 
 void input() {
     // ...
+    game.lib.input();
 }
 
 void update() {
@@ -27,7 +30,7 @@ void update() {
         return;
     }
 
-    // ...
+    game.lib.update();
 }
 
 void draw() {
@@ -40,10 +43,15 @@ void draw() {
         DrawText("Raylib", 150, 280, 80, LIGHTGRAY);
     }
     EndDrawing();
+
+    game.lib.draw();
 }
 
 void shutdown() {
     UnloadTexture(game.assets.texture);
+
+    game.lib.shutdown();
+    unload(&game.lib);
 
     game = (Game) { 0 };
 
