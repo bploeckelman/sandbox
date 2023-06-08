@@ -35,7 +35,8 @@ endif()
 
 add_executable(${PROJECT_NAME}
         src/main.c
-        )
+        src/game.c
+)
 
 #set(raylib_VERBOSE 1)
 
