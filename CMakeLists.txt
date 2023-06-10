@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.25)
 
+cmake_policy(SET CMP0054 NEW)               # suppress warnings for 'if()' interpolating unquoted args
+
 ## Project configuration
 ## --------------------------
 project(raylib_sandbox
@@ -9,13 +11,14 @@ project(raylib_sandbox
 
 set(GAME    "game")
 set(GAMELIB "gamelib_build")
+
 set(SRC   "${PROJECT_SOURCE_DIR}/src")
 set(LIB   "${PROJECT_SOURCE_DIR}/lib")
 set(BUILD "${PROJECT_SOURCE_DIR}/build")
+set(ASSETS "${PROJECT_SOURCE_DIR}/assets")
 
 ## CMake configuration
 ## --------------------------
-cmake_policy(SET CMP0054 NEW)               # suppress warnings for 'if()' interpolating unquoted args
 
 set(CMAKE_C_STANDARD 17)                    # have some standards
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)       # generate compile_commands.json
@@ -77,6 +80,7 @@ target_link_libraries(${GAME} PUBLIC raylib)
 if (${PLATFORM} STREQUAL "Web")
     # tell emscripten to build an example.html file
     set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".html")
+    # TODO - statically link gamelib
 endif()
 
 # link appropriate frameworks if running on macos

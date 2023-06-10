@@ -2,6 +2,7 @@
 #define RAYLIB_SANDBOX_GAMELIB_H
 
 #include <stdbool.h>
+#include "raylib.h"
 
 #ifdef _MSC_VER
 #define DLL_EXPORT __declspec(dllexport)

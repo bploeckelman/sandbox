@@ -5,16 +5,21 @@
 const char *PATH = "./build";
 const char *NAME = "gamelib";
 
-#ifdef _WIN32
+// ----------------------------------------------------------------------------
+// Platform specific shared library support
+// ----------------------------------------------------------------------------
+
+
+#ifdef _WIN32 // Windows Shared Library ---------------------------------------
 
 const char *EXTENSION = "dll";
 
-#include <windows.h>
+#include "../utils/windows_raylib_safe.h"
 #include <libloaderapi.h>
 
 void load(GameLib *lib) {
     if (lib->loaded) {
-        fprintf(stderr, "Game lib: can't load, already loaded\n");
+        fprintf(stderr, "ERROR: LIBRARY: can't load, already loaded\n");
         return;
     }
 
@@ -50,21 +55,24 @@ void unload(GameLib *lib) {
     *lib = (GameLib) { 0 };
 }
 
-//#elif __APPLE__
+//#elif __APPLE__ // MacOS Shared Library -------------------------------------
 //
-//#include <dlfcn.h>
-//#define LOAD_LIBRARY dlopen(filename, RTLD_LAZY)
 //const char *EXTENSION = "dylib";
 //
-//#elif linux
+//#include <dlfcn.h>
 //
-//    #include <dlfcn.h>
-//    #define LOAD_LIBRARY dlopen(filename, RTLD_LAZY)
-//    const char *EXTENSION = "so";
+// ...
+//
+//#elif linux // Linux Shared Library -----------------------------------------
+//
+//const char *EXTENSION = "so";
+//
+//#include <dlfcn.h>
+//
+#else // Unsupported Platform -------------------------------------------------
 
-#else
+#error "Platform not supported"
 
-    #error "Platform not supported"
+// TODO - not sure shared libs are able to be used if targetting web
 
 #endif
-

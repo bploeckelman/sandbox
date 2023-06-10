@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <stdio.h>
 
 #include "game.h"
 #include "raylib.h"
@@ -12,15 +13,13 @@ void initialize() {
     InitWindow(game.window.width, game.window.height, "Raylib Sandbox");
     SetTargetFPS(60);
 
-    game.assets.texture = LoadTexture("data/game-space.png");
-
     load(&game.lib);
+    game.lib.initialize();
 
     game.running = true;
 }
 
 void input() {
-    // ...
     game.lib.input();
 }
 
@@ -34,22 +33,10 @@ void update() {
 }
 
 void draw() {
-    Texture texture = game.assets.texture;
-
-    BeginDrawing();
-    {
-        ClearBackground(SKYBLUE);
-        DrawTexture(texture, (game.window.width - texture.width) / 2, (game.window.height- texture.height) / 2, WHITE);
-        DrawText("Raylib", 150, 280, 80, LIGHTGRAY);
-    }
-    EndDrawing();
-
     game.lib.draw();
 }
 
 void shutdown() {
-    UnloadTexture(game.assets.texture);
-
     game.lib.shutdown();
     unload(&game.lib);
 

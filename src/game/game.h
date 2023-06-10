@@ -13,10 +13,6 @@ typedef struct Game {
         int height;
     } window;
 
-    struct Assets {
-        Texture texture;
-    } assets;
-
     GameLib lib;
 
 } Game;
