@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.25)
 
-cmake_policy(SET CMP0054 NEW)               # suppress warnings for 'if()' interpolating unquoted args
+cmake_policy(SET CMP0054 NEW)    # suppress warnings for 'if()' interpolating unquoted args
+cmake_policy(SET CMP0141 NEW)    # allow MSVC_DEBUG_INFORMATION_FORMAT property to embed debug info into object file for shared lib
 
 ## Project configuration
 ## --------------------------
@@ -36,8 +37,23 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE "${BUILD}/release")
 # since the shared library won't link if the pdb file is locked
 # this doesn't quite work though...
 if (CMAKE_C_COMPILER_ID MATCHES "MSVC")
-    string(TIMESTAMP TIME "%H%M%S")
-    set(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} /PDB:${GAMELIB}_${TIME}.pdb")
+#    string(TIMESTAMP TIME "%H%M%S")
+#    set(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} /PDBALTPATH:${GAMELIB}_temp.pdb}") # /PDB:${GAMELIB}_${TIME}.pdb")
+#    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /Z7")
+    # should (maybe) force debugging info to be built into object files instead of in a separate pdb file
+#    set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "${CMAKE_MSVC_DEBUG_INFORMATION_FORMAT} Embedded")
+
+    # NOTE - even with the MSVC DEBUG INFORMATION FORMAT property set to 'Embedded'
+    # if the linker gets a /debug flag it'll generate the pdb file anyway (though unclear whether it holds a lock on it)
+    # so the only way I can see to completely remove the pdb is to force embed the debug symbols
+    # and also strip the /debug linker flag...
+    # https://github.com/MicrosoftDocs/cpp-docs/blob/main/docs/build/reference/z7-zi-zi-debug-information-format.md#z7
+    # still doesn't solve the problem exactly, as the state.running field gets reset to false after reloading
+    # and it doesn't seem like we can reset it properly?
+    string(REPLACE "/debug" "" MY_SHARED_LINKER_FLAGS_DEBUG ${CMAKE_SHARED_LINKER_FLAGS_DEBUG})
+    set(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${MY_SHARED_LINKER_FLAGS_DEBUG}")
+#    message("SHARED_LINKER_FLAGS: " "${CMAKE_SHARED_LINKER_FLAGS_DEBUG}")
+#    message("MY_SHARED_LINKER_FLAGS: " "${MY_SHARED_LINKER_FLAGS_DEBUG}")
 endif()
 
 ## Raylib configuration
@@ -75,6 +91,24 @@ add_custom_command(TARGET ${GAMELIB} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         $<TARGET_FILE:${GAMELIB}> "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gamelib${CMAKE_SHARED_LIBRARY_SUFFIX}"
 )
+#add_custom_command(TARGET ${GAMELIB} PRE_LINK
+#        COMMAND ${CMAKE_COMMAND} -E copy
+#        $<TARGET_PDB_FILE:${GAMELIB}>
+#)
+#add_custom_command(TARGET ${GAMELIB} PRE_LINK
+#        COMMAND ${CMAKE_COMMAND} -E rm
+#        $<TARGET_PDB_FILE:${GAMELIB}>
+#)
+
+if (CMAKE_C_COMPILER_ID MATCHES "MSVC")
+    # should (maybe) force debugging info to be built into object files instead of in a separate pdb file
+    # https://cmake.org/cmake/help/latest/prop_tgt/MSVC_DEBUG_INFORMATION_FORMAT.html
+    # not sure if the 'CMAKE_' prefix is required here or not
+    set_property(TARGET ${GAMELIB} PROPERTY
+            MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo>:Embedded>")
+    set_property(TARGET ${GAMELIB} PROPERTY
+            CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<$<CONFIG:Debug,RelWithDebInfo>:Embedded>")
+endif()
 
 ## Project executable
 ## --------------------------

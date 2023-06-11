@@ -29,6 +29,7 @@ EXPORT void init(GameState *state) {
 // TODO - separate update/input/draw
 EXPORT void update(GameState *state) {
     if (WindowShouldClose()) {
+        printf("Window should close");
         state->running = false;
         return;
     }
@@ -64,8 +65,10 @@ EXPORT void shutdown(GameState *state) {
 
 EXPORT void reload(GameState *state) {
     printf("INFO: GAMELIB: reload\n");
+    state->running = true;
 }
 
 EXPORT void unload(GameState *state) {
     printf("INFO: GAMELIB: unload\n");
+    state->running = false;
 }
