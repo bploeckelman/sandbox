@@ -1,78 +1,71 @@
 #include <stdio.h>
-#include "gamelib.h"
+
+#include "../state/state.h"
+
+#define STB_SPRINTF_IMPLEMENTATION
 #include "../../lib/stb_sprintf.h"
 
-const char *PATH = "./build";
-const char *NAME = "gamelib";
-
-// ----------------------------------------------------------------------------
-// Platform specific shared library support
-// ----------------------------------------------------------------------------
-
-
-#ifdef _WIN32 // Windows Shared Library ---------------------------------------
-
-const char *EXTENSION = "dll";
-
-#include "../utils/windows_raylib_safe.h"
-#include <libloaderapi.h>
-
-void load(GameLib *lib) {
-    if (lib->loaded) {
-        fprintf(stderr, "ERROR: LIBRARY: can't load, already loaded\n");
-        return;
-    }
-
-    char filename[512];
-    stbsp_sprintf(filename, "%s/%s.%s", PATH, NAME, EXTENSION);
-
-    lib->handle = (void *) LoadLibraryA(filename);
-    if (!lib->handle) {
-        fprintf(stderr, "ERROR: LIBRARY: failed to load '%s'\n", filename);
-        return;
-    }
-    printf("INFO: LIBRARY: loaded '%s'\n", filename);
-
-    lib->initialize = (void (*)()) GetProcAddress(lib->handle, "initialize");
-    lib->shutdown   = (void (*)()) GetProcAddress(lib->handle, "shutdown");
-    lib->input      = (void (*)()) GetProcAddress(lib->handle, "input");
-    lib->update     = (void (*)()) GetProcAddress(lib->handle, "update");
-    lib->draw       = (void (*)()) GetProcAddress(lib->handle, "draw");
-    printf("INFO: LIBRARY: loaded functions\n");
-
-    lib->loaded = true;
-}
-
-void unload(GameLib *lib) {
-    if (!lib->loaded) {
-        fprintf(stderr, "ERROR: LIBRARY: can't unload game library, not loaded\n");
-        return;
-    }
-
-    FreeLibrary(lib->handle);
-    printf("INFO: LIBRARY: unloaded game library\n");
-
-    *lib = (GameLib) { 0 };
-}
-
-//#elif __APPLE__ // MacOS Shared Library -------------------------------------
-//
-//const char *EXTENSION = "dylib";
-//
-//#include <dlfcn.h>
-//
-// ...
-//
-//#elif linux // Linux Shared Library -----------------------------------------
-//
-//const char *EXTENSION = "so";
-//
-//#include <dlfcn.h>
-//
-#else // Unsupported Platform -------------------------------------------------
-
-#error "Platform not supported"
-
-// TODO - not sure shared libs are able to be used if targetting web
-
+#ifdef _MSC_VER
+    #define EXPORT __declspec(dllexport)
+#elif __GNUC__ >= 4
+    #define EXPORT __attribute__((visibility("default")))
+#else
+    #define EXPORT
 #endif
+
+EXPORT void init(GameState *state) {
+    printf("INFO: GAMELIB: initialize\n");
+
+    InitWindow(1280, 720, "Raylib Sandbox");
+    SetTargetFPS(60);
+
+    state->assets.textures[0] = LoadTexture("assets/game-pads.png");
+    state->assets.textures[1] = LoadTexture("assets/game-space.png");
+    state->assets.textureIndex = 1;
+
+    state->running = true;
+}
+
+// TODO - separate update/input/draw
+EXPORT void update(GameState *state) {
+    if (WindowShouldClose()) {
+        state->running = false;
+        return;
+    }
+
+    if (IsKeyPressed(KEY_SPACE)) {
+        state->assets.textureIndex = (state->assets.textureIndex + 1) % NUM_TEXTURES;
+    }
+    if (IsKeyPressed(KEY_ENTER)) {
+        state->assets.textureIndex = (state->assets.textureIndex + 1) % NUM_TEXTURES;
+    }
+
+    BeginDrawing();
+    {
+        Texture texture = state->assets.textures[state->assets.textureIndex];
+        int window_width = GetScreenWidth();
+        int window_height = GetScreenHeight();
+
+        ClearBackground(SKYBLUE);
+        DrawTexture(texture, (window_width - texture.width) / 2, (window_height- texture.height) / 2, WHITE);
+        DrawText("Raylib", 150, 280, 80, LIGHTGRAY);
+    }
+    EndDrawing();
+}
+
+EXPORT void shutdown(GameState *state) {
+    printf("INFO: GAMELIB: shutdown\n");
+    UnloadTexture(state->assets.textures[0]);
+    UnloadTexture(state->assets.textures[1]);
+    *state = (GameState) { 0 };
+
+    CloseWindow();
+}
+
+EXPORT void reload(GameState *state) {
+    printf("INFO: GAMELIB: reload\n");
+}
+
+EXPORT void unload(GameState *state) {
+    printf("INFO: GAMELIB: unload\n");
+}

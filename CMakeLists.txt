@@ -28,6 +28,18 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${BUILD}")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG "${BUILD}/debug")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE "${BUILD}/release")
 
+## Build configuration
+## --------------------------
+
+# TODO
+# try to convince visual studio to not locking the pdb file so hot reloading works
+# since the shared library won't link if the pdb file is locked
+# this doesn't quite work though...
+if (CMAKE_C_COMPILER_ID MATCHES "MSVC")
+    string(TIMESTAMP TIME "%H%M%S")
+    set(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} /PDB:${GAMELIB}_${TIME}.pdb")
+endif()
+
 ## Raylib configuration
 ## --------------------------
 set(RAYLIB_VERSION 4.5.0)
@@ -54,21 +66,19 @@ endif()
 ## Game code shared library
 ## --------------------------
 add_library(${GAMELIB} SHARED
-        ${SRC}/gamelib/gamelib_impl.c
-        )
+        ${SRC}/gamelib/gamelib.c
+)
 target_link_libraries(${GAMELIB} PUBLIC raylib)
 
 # move the shared lib into a well known directory after building
 add_custom_command(TARGET ${GAMELIB} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         $<TARGET_FILE:${GAMELIB}> "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gamelib${CMAKE_SHARED_LIBRARY_SUFFIX}"
-        )
+)
 
 ## Project executable
 ## --------------------------
 add_executable(${GAME}
-        ${SRC}/gamelib/gamelib.c
-        ${SRC}/game/game.c
         ${SRC}/main.c
 )
 target_link_libraries(${GAME} PUBLIC raylib)
